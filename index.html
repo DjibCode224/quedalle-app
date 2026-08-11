@@ -1253,10 +1253,24 @@ async function doLogin() {
     return;
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-  if (error) { err.style.display = 'block'; return; }
-  document.getElementById('page-login').style.display = 'none';
-  initApp();
+  try {
+    if (typeof window.supabase === 'undefined' || typeof supabase === 'undefined') {
+      err.textContent = 'Erreur : la librairie Supabase ne s\'est pas chargée (problème de connexion internet). Rechargez la page et réessayez.';
+      err.style.display = 'block';
+      return;
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      err.textContent = 'Erreur de connexion : ' + error.message;
+      err.style.display = 'block';
+      return;
+    }
+    document.getElementById('page-login').style.display = 'none';
+    initApp();
+  } catch (e) {
+    err.textContent = 'Erreur technique : ' + e.message;
+    err.style.display = 'block';
+  }
 }
 
 async function doLogout() {
