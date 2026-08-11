@@ -9,6 +9,21 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:16px;font-size:14px;z-index:99999;word-break:break-word;';
+  box.innerHTML = '<b>ERREUR DÉTECTÉE :</b><br>' + msg + '<br><small>Ligne ' + line + '</small>';
+  document.body.appendChild(box);
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:16px;font-size:14px;z-index:99999;word-break:break-word;';
+  box.innerHTML = '<b>ERREUR PROMESSE :</b><br>' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+  document.body.appendChild(box);
+});
+</script>
 <!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
