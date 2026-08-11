@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRUCTURE QUEDALLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ─── DESIGN TOKENS ────────────────────────────────────────── */
+:root {
+  --ink:      #0D1B2A;
+  --navy:     #1F3A5F;
+  --blue:     #2563EB;
+  --gold:     #C8922A;
+  --amber:    #F59E0B;
+  --cream:    #F5F0E8;
+  --white:    #FFFFFF;
+  --muted:    #64748B;
+  --border:   rgba(31,58,95,0.12);
+  --danger:   #DC2626;
+  --success:  #16A34A;
+  --warn:     #D97706;
+
+  --font-display: 'Cinzel', serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  --sidebar-w: 260px;
+  --header-h:  64px;
+  --radius:    12px;
+  --shadow:    0 4px 24px rgba(13,27,42,0.10);
+  --shadow-lg: 0 12px 40px rgba(13,27,42,0.18);
+}
+
+/* ─── RESET & BASE ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* ─── LOGIN PAGE ────────────────────────────────────────────── */
+#page-login {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(37,99,235,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(200,146,42,0.12) 0%, transparent 60%);
+}
+.login-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 52px 44px;
+  width: 100%; max-width: 420px;
+  text-align: center;
+}
+.login-emblem {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 26px; color: var(--ink);
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(200,146,42,0.40);
+}
+.login-title {
+  font-family: var(--font-display);
+  font-size: 22px; color: var(--white);
+  letter-spacing: 2px; margin-bottom: 6px;
+}
+.login-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 36px; }
+.login-field { margin-bottom: 16px; text-align: left; }
+.login-field label { display: block; font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 6px; letter-spacing: 0.5px; }
+.login-field input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+.login-field input:focus { border-color: var(--gold); }
+.login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border: none; border-radius: 8px;
+  padding: 14px;
+  font-family: var(--font-display);
+  font-size: 13px; letter-spacing: 1.5px;
+  color: var(--ink); cursor: pointer;
+  margin-top: 8px;
+  transition: opacity .2s, transform .1s;
+}
+.login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.login-error {
+  color: #FCA5A5; font-size: 13px;
+  margin-top: 14px; display: none;
+}
+
+/* ─── SIDEBAR ───────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--ink);
+  height: 100vh;
+  position: fixed; left: 0; top: 0;
+  display: flex; flex-direction: column;
+  z-index: 100;
+  transition: transform .3s;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-badge {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 15px; color: var(--ink); font-weight: 900;
+  flex-shrink: 0;
+}
+.logo-text { font-family: var(--font-display); font-size: 11px; color: var(--white); letter-spacing: 1px; line-height: 1.4; }
+.logo-text span { display: block; color: rgba(255,255,255,0.40); font-size: 9px; letter-spacing: 1.5px; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-section { margin-bottom: 6px; }
+.nav-section-label {
+  font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.25);
+  padding: 10px 12px 4px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.55);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: all .15s;
+  position: relative;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-item.active {
+  background: rgba(37,99,235,0.25);
+  color: var(--white);
+  font-weight: 500;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; background: var(--gold);
+  border-radius: 0 2px 2px 0;
+}
+.nav-icon { width: 18px; text-align: center; font-size: 16px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: white; font-size: 10px;
+  padding: 2px 6px; border-radius: 10px; font-weight: 600;
+}
+
+.sidebar-user {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: white; font-weight: 600; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; color: white; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role {
+  font-size: 10px; color: rgba(255,255,255,0.4);
+  text-transform: capitalize; letter-spacing: 0.5px;
+}
+.user-logout {
+  color: rgba(255,255,255,0.30);
+  cursor: pointer; font-size: 16px;
+  transition: color .15s;
+}
+.user-logout:hover { color: var(--danger); }
+
+/* ─── MAIN LAYOUT ───────────────────────────────────────────── */
+#app {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+#header {
+  height: var(--header-h);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 28px;
+  position: sticky; top: 0; z-index: 50;
+  gap: 16px;
+}
+.header-title { font-family: var(--font-display); font-size: 15px; color: var(--navy); flex: 1; letter-spacing: 1px; }
+.header-notif {
+  position: relative; cursor: pointer;
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.header-notif:hover { background: var(--cream); }
+.header-notif .dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--danger); border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* ─── MAIN CONTENT ──────────────────────────────────────────── */
+#main { flex: 1; padding: 28px; overflow-y: auto; }
+
+/* ─── PAGES (tabs) ──────────────────────────────────────────── */
+.page { display: none; animation: fadeIn .25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ─── PAGE TITLE ────────────────────────────────────────────── */
+.page-header { margin-bottom: 24px; }
+.page-title { font-family: var(--font-display); font-size: 22px; color: var(--navy); letter-spacing: 1px; }
+.page-subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* ─── STAT CARDS ────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.blue::before   { background: var(--blue); }
+.stat-card.gold::before   { background: var(--gold); }
+.stat-card.green::before  { background: var(--success); }
+.stat-card.red::before    { background: var(--danger); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.stat-value { font-family: var(--font-display); font-size: 28px; color: var(--navy); }
+.stat-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.stat-icon  { position: absolute; right: 18px; top: 18px; font-size: 28px; opacity: 0.12; }
+
+/* ─── SECTION CARD ──────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.card-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.card-title { font-family: var(--font-display); font-size: 13px; color: var(--navy); letter-spacing: 0.5px; flex: 1; }
+.card-body  { padding: 20px 22px; }
+
+/* ─── TABLE ─────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  text-align: left; padding: 10px 14px;
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  background: var(--cream);
+}
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(37,99,235,0.03); }
+
+/* ─── BADGES / PILLS ────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.3px;
+}
+.badge-green  { background: #DCFCE7; color: #15803D; }
+.badge-red    { background: #FEE2E2; color: #B91C1C; }
+.badge-amber  { background: #FEF3C7; color: #B45309; }
+.badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+.badge-muted  { background: #F1F5F9; color: var(--muted); }
+.badge-gold   { background: #FEF9C3; color: #92400E; }
+
+/* ─── BUTTONS ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 8px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all .15s;
+}
+.btn-primary   { background: var(--blue); color: white; }
+.btn-primary:hover { background: #1D4ED8; }
+.btn-gold      { background: var(--gold); color: white; }
+.btn-gold:hover { background: #A8791F; }
+.btn-outline   { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+.btn-outline:hover { background: var(--cream); }
+.btn-danger    { background: var(--danger); color: white; }
+.btn-sm        { padding: 6px 12px; font-size: 12px; }
+
+/* ─── MEMBER GRID ───────────────────────────────────────────── */
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.member-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  transition: all .15s;
+}
+.member-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.member-av {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 20px; color: white;
+  margin-bottom: 12px;
+}
+.member-name { font-weight: 500; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.member-role { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+.member-tags { margin-top: 10px; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+
+/* ─── COTISATION TABLE ──────────────────────────────────────── */
+.cotis-grid {
+  display: grid;
+  grid-template-columns: 180px repeat(3, 1fr) auto;
+  gap: 0;
+}
+.cotis-header, .cotis-row {
+  display: contents;
+}
+.cotis-header > div {
+  padding: 10px 14px;
+  background: var(--cream);
+  font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted); font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+.cotis-row > div {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  font-size: 13.5px;
+}
+.cotis-row:last-child > div { border-bottom: none; }
+.cotis-row > div:hover { background: rgba(37,99,235,0.03); }
+
+/* ─── VOTE CARD ─────────────────────────────────────────────── */
+.vote-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  transition: all .15s;
+}
+.vote-card:hover { box-shadow: var(--shadow); }
+.vote-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.vote-title { font-family: var(--font-display); font-size: 15px; color: var(--navy); margin-bottom: 6px; }
+.vote-desc  { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.vote-bar-wrap { margin-bottom: 16px; }
+.vote-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.vote-bar { height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden; display: flex; }
+.vote-bar-pour    { background: var(--success); border-radius: 4px 0 0 4px; transition: width .4s; }
+.vote-bar-contre  { background: var(--danger); transition: width .4s; }
+.vote-bar-abst    { background: var(--muted); border-radius: 0 4px 4px 0; transition: width .4s; }
+.vote-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ─── FINANCE / CAISSE ──────────────────────────────────────── */
+.caisse-hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--ink) 100%);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  position: relative; overflow: hidden;
+}
+.caisse-hero::after {
+  content: '₣';
+  position: absolute; right: 24px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-size: 80px; color: rgba(255,255,255,0.05);
+}
+.caisse-label { font-size: 11px; color: rgba(255,255,255,0.50); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.caisse-amount { font-family: var(--font-display); font-size: 40px; color: var(--white); }
+.caisse-amount small { font-size: 18px; color: rgba(255,255,255,0.50); margin-left: 4px; }
+.caisse-meta { display: flex; gap: 28px; margin-top: 16px; }
+.caisse-meta-item { }
+.caisse-meta-label { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; }
+.caisse-meta-val   { font-size: 14px; color: white; font-weight: 500; }
+
+/* ─── NOTIFICATION PANEL ────────────────────────────────────── */
+.notif-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px;
+  align-items: flex-start;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--blue); flex-shrink: 0; margin-top: 5px;
+}
+.notif-dot.read { background: transparent; border: 1px solid var(--muted); }
+.notif-content { flex: 1; }
+.notif-title { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.notif-body  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.notif-time  { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ─── MESSAGES ──────────────────────────────────────────────── */
+.msg-list { max-height: 420px; overflow-y: auto; padding: 4px 0; }
+.msg-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.msg-item:last-child { border-bottom: none; }
+.msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.msg-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; color: white; flex-shrink: 0;
+}
+.msg-author { font-size: 13px; font-weight: 500; color: var(--ink); }
+.msg-role   { font-size: 10px; color: var(--muted); }
+.msg-time   { margin-left: auto; font-size: 11px; color: var(--muted); }
+.msg-text   { font-size: 13.5px; color: var(--ink); padding-left: 36px; line-height: 1.5; }
+.msg-pinned { background: #FFFBEB; border-left: 3px solid var(--amber); padding-left: 12px; border-radius: 4px; }
+.msg-input-wrap {
+  display: flex; gap: 8px; margin-top: 16px;
+  padding-top: 16px; border-top: 1px solid var(--border);
+}
+.msg-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-family: var(--font-body); font-size: 13.5px;
+  outline: none; resize: none;
+  transition: border-color .15s;
+}
+.msg-input:focus { border-color: var(--blue); }
+
+/* ─── REUNION ───────────────────────────────────────────────── */
+.reunion-list { display: flex; flex-direction: column; gap: 12px; }
+.reunion-item {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
+  transition: all .15s;
+}
+.reunion-item:hover { box-shadow: var(--shadow); }
+.reunion-date-box {
+  width: 52px; flex-shrink: 0; text-align: center;
+  background: var(--cream);
+  border-radius: 8px; padding: 8px 4px;
+}
+.reunion-day   { font-family: var(--font-display); font-size: 22px; color: var(--navy); line-height: 1; }
+.reunion-month { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
+.reunion-info  { flex: 1; }
+.reunion-title { font-weight: 500; font-size: 14px; color: var(--ink); }
+.reunion-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 12px; }
+.reunion-actions { display: flex; gap: 6px; }
+
+/* ─── MODAL ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,0.60);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-title { font-family: var(--font-display); font-size: 17px; color: var(--navy); margin-bottom: 20px; letter-spacing: 0.5px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--font-body); font-size: 14px;
+  outline: none; background: var(--cream);
+  transition: border-color .15s, background .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue); background: white;
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+#toast-container {
+  position: fixed; bottom: 28px; right: 28px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--ink); color: white;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 13.5px; display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn .25s ease;
+  max-width: 320px;
+}
+.toast.success { background: var(--success); }
+.toast.error   { background: var(--danger); }
+.toast.warn    { background: var(--warn); }
+@keyframes toastIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ─── RESPONSIVE ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.mobile-open { transform: none; }
+  #app { margin-left: 0; }
+  #main { padding: 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .caisse-amount { font-size: 28px; }
+  #header { padding: 0 16px; }
+}
+
+/* ─── HAMBURGER ─────────────────────────────────────────────── */
+.hamburger {
+  display: none; cursor: pointer;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  align-items: center; justify-content: center;
+  background: var(--cream);
+}
+@media (max-width: 768px) { .hamburger { display: flex; } }
+
+/* ─── DISCIPLINE ────────────────────────────────────────────── */
+.discipline-card {
+  background: #FFF5F5;
+  border: 1px solid #FCA5A5;
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex; gap: 14px;
+  margin-bottom: 12px;
+}
+.discipline-icon { font-size: 24px; flex-shrink: 0; }
+.discipline-info { flex: 1; }
+.discipline-member { font-weight: 600; font-size: 14px; color: var(--ink); }
+.discipline-motif  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.discipline-meta   { font-size: 11px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ──────── LOGIN PAGE ──────── -->
+<div id="page-login">
+  <div class="login-card">
+    <div class="login-emblem">SQ</div>
+    <div class="login-title">STRUCTURE QUEDALLE</div>
+    <div class="login-sub">Groupe de solidarité · Espace membres</div>
+    <div class="login-field">
+      <label>Adresse email</label>
+      <input type="email" id="login-email" placeholder="votre@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Mot de passe</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">ACCÉDER À MON ESPACE</button>
+    <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ──────── SIDEBAR ──────── -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">SQ</div>
+    <div class="logo-text">
+      STRUCTURE<br>QUEDALLE
+      <span>Solidarité · Guinée</span>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('accueil', this)">
+        <span class="nav-icon">🏠</span> Accueil
+      </div>
+      <div class="nav-item" onclick="showPage('membres', this)">
+        <span class="nav-icon">👥</span> Membres
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Gestion</div>
+      <div class="nav-item" onclick="showPage('cotisations', this)">
+        <span class="nav-icon">💰</span> Cotisations
+      </div>
+      <div class="nav-item" onclick="showPage('reunions', this)">
+        <span class="nav-icon">📅</span> Réunions
+      </div>
+      <div class="nav-item" onclick="showPage('votes', this)">
+        <span class="nav-icon">🗳️</span> Votes
+        <span class="nav-badge" id="badge-votes">1</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Finance & Discipline</div>
+      <div class="nav-item" onclick="showPage('finances', this)">
+        <span class="nav-icon">📊</span> Trésorerie
+      </div>
+      <div class="nav-item" onclick="showPage('discipline', this)" id="nav-discipline">
+        <span class="nav-icon">⚖️</span> Discipline
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Communication</div>
+      <div class="nav-item" onclick="showPage('messages', this)">
+        <span class="nav-icon">💬</span> Messages
+        <span class="nav-badge" id="badge-msgs">3</span>
+      </div>
+      <div class="nav-item" onclick="showPage('notifications', this)">
+        <span class="nav-icon">🔔</span> Notifications
+        <span class="nav-badge" id="badge-notifs">2</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">DS</div>
+    <div class="user-info">
+      <div class="user-name" id="user-name">Djibril Sow</div>
+      <div class="user-role" id="user-role">Président</div>
+    </div>
+    <div class="user-logout" onclick="doLogout()" title="Déconnexion">⏻</div>
+  </div>
+</nav>
+
+<!-- ──────── APP ──────── -->
+<div id="app">
+  <header id="header">
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <div class="header-title" id="header-title">TABLEAU DE BORD</div>
+    <div class="header-notif" onclick="showPage('notifications', null)">
+      🔔 <div class="dot"></div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ══ PAGE ACCUEIL ══ -->
+    <div id="page-accueil" class="page active">
+      <div class="page-header">
+        <div class="page-title">Tableau de bord</div>
+        <div class="page-subtitle" id="dash-welcome">Bienvenue, Djibril • Trimestre 2 — 2026</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Membres actifs</div>
+          <div class="stat-value">7</div>
+          <div class="stat-sub">Membres fondateurs</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Caisse actuelle</div>
+          <div class="stat-value" id="stat-caisse">—</div>
+          <div class="stat-sub">Solde disponible</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Cotisations à jour</div>
+          <div class="stat-value" id="stat-cotis">—</div>
+          <div class="stat-sub">Ce trimestre</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-label">En retard</div>
+          <div class="stat-value" id="stat-retard">—</div>
+          <div class="stat-sub">Paiements en attente</div>
+        </div>
+      </div>
+
+      <!-- Réunion à venir + vote actif -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header">
+            <span>📅</span>
+            <div class="card-title">Prochaine réunion</div>
+          </div>
+          <div class="card-body" id="prochaine-reunion">
+            <div style="text-align:center;padding:20px;color:var(--muted);">
+              Chargement…
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span>🗳️</span>
+            <div class="card-title">Vote en cours</div>
+          </div>
+          <div class="card-body" id="vote-en-cours">
+            <div style="text-align:center;padding:20px;color:var(--muted);">
+              Chargement…
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE MEMBRES ══ -->
+    <div id="page-membres" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Membres</div>
+          <div class="page-subtitle">7 membres fondateurs</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-membre')" id="btn-add-membre">+ Nouvelle adhésion</button>
+      </div>
+
+      <div class="member-grid" id="member-grid">
+        <!-- Généré dynamiquement -->
+      </div>
+    </div>
+
+    <!-- ══ PAGE COTISATIONS ══ -->
+    <div id="page-cotisations" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Cotisations</div>
+          <div class="page-subtitle">Cycle trimestriel · 40 000 FGN / trimestre</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="exportBilanPDF()">📄 Bilan PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-paiement')" id="btn-cotis-record">+ Enregistrer paiement</button>
+        </div>
+      </div>
+
+      <!-- Légende -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <span class="badge badge-green">✓ Payé</span>
+        <span class="badge badge-amber">⏳ En attente</span>
+        <span class="badge badge-red">⚠ Retard</span>
+        <span class="badge badge-muted">— Non concerné</span>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span>💰</span>
+          <div class="card-title">Trimestre 2 — 2026</div>
+          <div style="display:flex;gap:6px;margin-left:auto">
+            <span class="badge badge-blue">Mois 1 : 10 000 FGN</span>
+            <span class="badge badge-blue">Mois 2 : 10 000 FGN</span>
+            <span class="badge badge-gold">Mois 3 : 20 000 FGN</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>Mois 1<br><small style="color:var(--muted);font-size:9px">26 avr.</small></th>
+                <th>Mois 2<br><small style="color:var(--muted);font-size:9px">31 mai</small></th>
+                <th>Mois 3<br><small style="color:var(--muted);font-size:9px">28 juin</small></th>
+                <th>Pénalité</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="cotis-tbody">
+              <!-- Généré dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE RÉUNIONS ══ -->
+    <div id="page-reunions" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Réunions</div>
+          <div class="page-subtitle">2 réunions par mois · En ligne + Physique</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-reunion')" id="btn-new-reunion">+ Planifier réunion</button>
+      </div>
+
+      <!-- Pénalités rappel -->
+      <div class="card" style="margin-bottom:20px;background:#FFFBEB;border-color:#FDE68A;">
+        <div class="card-body" style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div><strong style="font-size:12px;color:var(--muted)">RETARD</strong><br><span style="font-size:18px;font-weight:600;color:var(--warn)">1 000 FGN</span></div>
+          <div><strong style="font-size:12px;color:var(--muted)">ABSENT JUSTIFIÉ</strong><br><span style="font-size:18px;font-weight:600;color:var(--warn)">2 000 FGN</span></div>
+          <div><strong style="font-size:12px;color:var(--muted)">ABSENT NON JUSTIFIÉ</strong><br><span style="font-size:18px;font-weight:600;color:var(--danger)">5 000 FGN</span></div>
+          <div><strong style="font-size:12px;color:var(--muted)">ÉTUDIANT INT.</strong><br><span style="font-size:18px;font-weight:600;color:var(--success)">Exonéré</span></div>
+        </div>
+      </div>
+
+      <div class="reunion-list" id="reunion-list">
+        <!-- Généré dynamiquement -->
+      </div>
+    </div>
+
+    <!-- ══ PAGE VOTES ══ -->
+    <div id="page-votes" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Votes & Décisions</div>
+          <div class="page-subtitle">Majorité : 4/7 · Unanimité : 7/7 (adhésion)</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-vote')" id="btn-new-vote">+ Créer un vote</button>
+      </div>
+      <div id="votes-list"><!-- Généré dynamiquement --></div>
+    </div>
+
+    <!-- ══ PAGE FINANCES ══ -->
+    <div id="page-finances" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Trésorerie</div>
+          <div class="page-subtitle">Registre de caisse · Géré par le trésorier</div>
+        </div>
+        <div style="display:flex;gap:8px;" id="finance-actions">
+          <button class="btn btn-outline btn-sm" onclick="exportBilanPDF()">📄 Bilan PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-transaction')">+ Transaction</button>
+        </div>
+      </div>
+
+      <div class="caisse-hero">
+        <div class="caisse-label">Solde disponible</div>
+        <div class="caisse-amount" id="caisse-montant">280 000 <small>FGN</small></div>
+        <div class="caisse-meta">
+          <div class="caisse-meta-item">
+            <div class="caisse-meta-label">Total entrées</div>
+            <div class="caisse-meta-val" id="caisse-entrees">360 000 FGN</div>
+          </div>
+          <div class="caisse-meta-item">
+            <div class="caisse-meta-label">Total sorties</div>
+            <div class="caisse-meta-val" id="caisse-sorties">80 000 FGN</div>
+          </div>
+          <div class="caisse-meta-item">
+            <div class="caisse-meta-label">T2 — 2026</div>
+            <div class="caisse-meta-val">En cours</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span>📋</span>
+          <div class="card-title">Registre des transactions</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Motif</th>
+                <th>Catégorie</th>
+                <th>Membre</th>
+                <th style="text-align:right">Montant</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody">
+              <!-- Généré dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE DISCIPLINE ══ -->
+    <div id="page-discipline" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="page-title">Discipline</div>
+          <div class="page-subtitle">Avertissements & amendes · 10 000 FGN</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="openModal('modal-sanction')" id="btn-new-sanction">⚠ Émettre une sanction</button>
+      </div>
+      <div id="sanctions-list"><!-- Généré dynamiquement --></div>
+    </div>
+
+    <!-- ══ PAGE MESSAGES ══ -->
+    <div id="page-messages" class="page">
+      <div class="page-header">
+        <div class="page-title">Messages</div>
+        <div class="page-subtitle">Communication interne · Membres uniquement</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="msg-list" id="msg-list"><!-- Généré dynamiquement --></div>
+          <div class="msg-input-wrap">
+            <textarea class="msg-input" id="msg-input" placeholder="Écrire un message au groupe…" rows="2"></textarea>
+            <button class="btn btn-primary" onclick="sendMessage()">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE NOTIFICATIONS ══ -->
+    <div id="page-notifications" class="page">
+      <div class="page-header">
+        <div class="page-title">Notifications</div>
+        <div class="page-subtitle">Vos alertes et rappels</div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="notif-list"><!-- Généré dynamiquement --></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ──────── MODALS ──────── -->
+
+<!-- Modal : Enregistrer paiement -->
+<div class="modal-overlay" id="modal-paiement">
+  <div class="modal">
+    <div class="modal-title">Enregistrer un paiement</div>
+    <div class="form-group">
+      <label class="form-label">Membre</label>
+      <select class="form-select" id="p-membre">
+        <option>Djibril Sow</option>
+        <option>Ibrahim Sory Keita</option>
+        <option>Alhassane Camara</option>
+        <option>Alhassane Bangoura</option>
+        <option>Aboubacar Sidiki Camara</option>
+        <option>Adrien Fabindi Touré</option>
+        <option>Boubacar Bah</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mois concerné</label>
+      <select class="form-select" id="p-mois">
+        <option value="1">Mois 1 — 10 000 FGN</option>
+        <option value="2">Mois 2 — 10 000 FGN</option>
+        <option value="3">Mois 3 — 20 000 FGN</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Montant payé (FGN)</label>
+      <input type="number" class="form-input" id="p-montant" value="10000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date de paiement</label>
+      <input type="date" class="form-input" id="p-date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-paiement')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePaiement()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Nouvelle réunion -->
+<div class="modal-overlay" id="modal-reunion">
+  <div class="modal">
+    <div class="modal-title">Planifier une réunion</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="r-type">
+        <option value="physique">Réunion physique (dernier dimanche)</option>
+        <option value="en_ligne">Réunion en ligne</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Titre / Ordre du jour</label>
+      <input type="text" class="form-input" id="r-titre" placeholder="ex: Réunion mensuelle — Juin 2026">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="r-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Heure</label>
+      <input type="time" class="form-input" id="r-heure" value="15:00">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lieu ou lien</label>
+      <input type="text" class="form-input" id="r-lieu" placeholder="Adresse physique ou lien Zoom/Meet">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-reunion')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveReunion()">Planifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Nouveau vote -->
+<div class="modal-overlay" id="modal-vote">
+  <div class="modal">
+    <div class="modal-title">Créer un vote</div>
+    <div class="form-group">
+      <label class="form-label">Type de vote</label>
+      <select class="form-select" id="v-type" onchange="updateVoteThreshold(this.value)">
+        <option value="standard">Décision standard (4/7)</option>
+        <option value="adhesion">Nouvelle adhésion (7/7 unanimité)</option>
+        <option value="depense">Dépense (4/7)</option>
+        <option value="reglement">Modification règlement (4/7)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Titre</label>
+      <input type="text" class="form-input" id="v-titre" placeholder="Objet du vote">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="v-desc" placeholder="Détails et contexte…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date de clôture</label>
+      <input type="datetime-local" class="form-input" id="v-cloture">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-vote')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveVote()">Ouvrir le vote</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Sanction -->
+<div class="modal-overlay" id="modal-sanction">
+  <div class="modal">
+    <div class="modal-title">Émettre une sanction</div>
+    <div class="form-group">
+      <label class="form-label">Membre concerné</label>
+      <select class="form-select" id="s-membre">
+        <option>Ibrahim Sory Keita</option>
+        <option>Alhassane Camara</option>
+        <option>Alhassane Bangoura</option>
+        <option>Aboubacar Sidiki Camara</option>
+        <option>Adrien Fabindi Touré</option>
+        <option>Boubacar Bah</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="s-type">
+        <option value="avertissement">Avertissement officiel</option>
+        <option value="amende">Amende — 10 000 FGN</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motif</label>
+      <textarea class="form-textarea" id="s-motif" placeholder="Décrire le manquement constaté…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-sanction')">Annuler</button>
+      <button class="btn btn-danger" onclick="saveSanction()">Émettre la sanction</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Transaction -->
+<div class="modal-overlay" id="modal-transaction">
+  <div class="modal">
+    <div class="modal-title">Enregistrer une transaction</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="t-type">
+        <option value="entrée">Entrée (cotisation, pénalité…)</option>
+        <option value="sortie">Sortie (dépense validée)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catégorie</label>
+      <select class="form-select" id="t-cat">
+        <option value="cotisation">Cotisation</option>
+        <option value="penalite">Pénalité de réunion</option>
+        <option value="amende">Amende disciplinaire</option>
+        <option value="depense">Dépense</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Montant (FGN)</label>
+      <input type="number" class="form-input" id="t-montant" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motif</label>
+      <input type="text" class="form-input" id="t-motif" placeholder="Description de la transaction">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="t-date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-transaction')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveTransaction()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Feuille de présence -->
+<div class="modal-overlay" id="modal-presence">
+  <div class="modal">
+    <div class="modal-title" id="presence-title">Feuille de présence</div>
+    <div id="presence-form"><!-- Généré dynamiquement --></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-presence')">Fermer</button>
+      <button class="btn btn-primary" onclick="savePresences()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── TOAST ──────── -->
+<div id="toast-container"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG SUPABASE — Remplacer par vos vraies clés
+// ════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://igholjiuhkriegkxlanm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaG9saml1aGtyaWVna3hsYW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjYwOTEsImV4cCI6MjEwMjA0MjA5MX0.ibnX5HA7o4vPCUwSrf81WGUaqKyrNtaTBTQS-PUKShI';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════════════════════════
+// DONNÉES DEMO (utilisées si Supabase non connecté)
+// ════════════════════════════════════════════════════════════
+const MEMBRES_DEMO = [
+  { id:'1', nom:'Djibril Sow',             role:'president', initiales:'DS', est_etudiant_interieur:false },
+  { id:'2', nom:'Ibrahim Sory Keita',       role:'tresorier', initiales:'IK', est_etudiant_interieur:false },
+  { id:'3', nom:'Alhassane Camara',         role:'membre',    initiales:'AC', est_etudiant_interieur:false },
+  { id:'4', nom:'Alhassane Bangoura',       role:'membre',    initiales:'AB', est_etudiant_interieur:true  },
+  { id:'5', nom:'Aboubacar Sidiki Camara',  role:'membre',    initiales:'AS', est_etudiant_interieur:false },
+  { id:'6', nom:'Adrien Fabindi Touré',     role:'membre',    initiales:'AT', est_etudiant_interieur:false },
+  { id:'7', nom:'Boubacar Bah',             role:'membre',    initiales:'BB', est_etudiant_interieur:false },
+];
+
+const COTIS_DEMO = [
+  { membre:'Djibril Sow',            m1:'payé',  m2:'payé',    m3:'impayé', penalite:0 },
+  { membre:'Ibrahim Sory Keita',     m1:'payé',  m2:'payé',    m3:'impayé', penalite:0 },
+  { membre:'Alhassane Camara',       m1:'retard',m2:'payé',    m3:'impayé', penalite:0 },
+  { membre:'Alhassane Bangoura',     m1:'payé',  m2:'impayé',  m3:'impayé', penalite:0, etudiant:true },
+  { membre:'Aboubacar Sidiki Camara',m1:'retard',m2:'retard',  m3:'impayé', penalite:10000 },
+  { membre:'Adrien Fabindi Touré',   m1:'payé',  m2:'payé',    m3:'impayé', penalite:0 },
+  { membre:'Boubacar Bah',           m1:'payé',  m2:'impayé',  m3:'impayé', penalite:0 },
+];
+
+const REUNIONS_DEMO = [
+  { id:'r1', titre:'Réunion mensuelle — Juin 2026', type:'physique',  date:'2026-06-29', heure:'15:00', lieu:'Domicile de Djibril Sow, Conakry', statut:'planifiée' },
+  { id:'r2', titre:'Réunion en ligne — Juin 2026',  type:'en_ligne',  date:'2026-06-15', heure:'20:00', lieu:'Lien Zoom partagé', statut:'planifiée' },
+  { id:'r3', titre:'Réunion mensuelle — Mai 2026',  type:'physique',  date:'2026-05-31', heure:'15:00', lieu:'Domicile de Djibril Sow, Conakry', statut:'terminée' },
+];
+
+const VOTES_DEMO = [
+  { id:'v1', titre:'Achat d\'un registre officiel', type:'depense', desc:'Acquisition d\'un registre papier pour archives officielles. Coût estimé : 15 000 FGN.', seuil:4, pour:3, contre:0, abst:1, statut:'ouvert', cloture:'2026-06-07' },
+  { id:'v2', titre:'Évaluation semestrielle du groupe', type:'standard', desc:'Bilan de fonctionnement du groupe pour les 6 premiers mois 2026.', seuil:4, pour:7, contre:0, abst:0, statut:'validé', cloture:'2026-05-28' },
+];
+
+const TRANSACTIONS_DEMO = [
+  { date:'2026-06-01', type:'entrée', motif:'Cotisation M1 — Djibril Sow',    cat:'cotisation', membre:'Djibril Sow',      montant:10000 },
+  { date:'2026-06-01', type:'entrée', motif:'Cotisation M1 — Ibrahim Keita',   cat:'cotisation', membre:'Ibrahim Sory Keita',montant:10000 },
+  { date:'2026-05-30', type:'entrée', motif:'Pénalité réunion — A. Camara',    cat:'penalite',   membre:'Alhassane Camara', montant:2000  },
+  { date:'2026-05-20', type:'sortie', motif:'Achat fournitures bureau',         cat:'depense',    membre:'—',                montant:25000 },
+  { date:'2026-04-30', type:'entrée', motif:'Cotisation T1 — Boubacar Bah',    cat:'cotisation', membre:'Boubacar Bah',     montant:40000 },
+];
+
+const MESSAGES_DEMO = [
+  { auteur:'Djibril Sow', role:'Président', initiales:'DS', texte:'📌 La prochaine réunion physique aura lieu le dimanche 29 juin à 15h00. Présence obligatoire pour tous.', epingle:true, time:'Hier 18:30' },
+  { auteur:'Ibrahim Sory Keita', role:'Trésorier', initiales:'IK', texte:'Rappel : les cotisations du mois 2 sont à régler avant le 31 mai. Contactez-moi pour tout paiement.', epingle:false, time:'26 mai 14:12' },
+  { auteur:'Alhassane Camara', role:'Membre', initiales:'AC', texte:'Bien reçu. Je règle ma cotisation demain matin.', epingle:false, time:'26 mai 15:05' },
+];
+
+const NOTIFS_DEMO = [
+  { type:'rappel_cotisation', titre:'Rappel cotisation', contenu:'Votre cotisation du mois 2 est attendue avant le 31 mai.', lu:false, time:'Il y a 2 jours' },
+  { type:'rappel_reunion', titre:'Réunion dans 24h', contenu:'Réunion physique demain à 15h00. Lieu : Domicile Djibril Sow.', lu:false, time:'Il y a 3 jours' },
+  { type:'resultat_vote', titre:'Vote clôturé', contenu:'Le vote "Évaluation semestrielle" a été validé (7/7).', lu:true, time:'Il y a 5 jours' },
+];
+
+const SANCTIONS_DEMO = [
+  { membre:'Aboubacar Sidiki Camara', type:'amende', motif:'Deux retards consécutifs de cotisation au T2', montant:10000, date:'2026-06-01', emis_par:'Djibril Sow' },
+  { membre:'Alhassane Camara',        type:'avertissement', motif:'Absence non justifiée à la réunion physique de mai', montant:0, date:'2026-05-31', emis_par:'Djibril Sow' },
+];
+
+// ════════════════════════════════════════════════════════════
+// ÉTAT DE L'APP
+// ════════════════════════════════════════════════════════════
+let currentUser = { nom:'Djibril Sow', role:'president', initiales:'DS' };
+let useDemo = false; // Supabase configuré
+
+// ════════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  if (useDemo) {
+    // Mode démo : accepte n'importe quel email non vide
+    if (!email) { err.style.display='block'; return; }
+    document.getElementById('page-login').style.display = 'none';
+    initApp();
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.style.display = 'block'; return; }
+  document.getElementById('page-login').style.display = 'none';
+  initApp();
+}
+
+async function doLogout() {
+  if (!useDemo) await supabase.auth.signOut();
+  document.getElementById('page-login').style.display = 'flex';
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT APP
+// ════════════════════════════════════════════════════════════
+function initApp() {
+  updateUserUI();
+  renderMembers();
+  renderCotisations();
+  renderReunions();
+  renderVotes();
+  renderTransactions();
+  renderMessages();
+  renderNotifications();
+  renderSanctions();
+  renderDashboard();
+  setDefaultDates();
+  applyRoleRestrictions();
+}
+
+function updateUserUI() {
+  document.getElementById('user-name').textContent   = currentUser.nom;
+  document.getElementById('user-role').textContent   = roleLabel(currentUser.role);
+  document.getElementById('user-avatar').textContent = currentUser.initiales;
+  document.getElementById('dash-welcome').textContent =
+    `Bienvenue, ${currentUser.nom.split(' ')[0]} · Trimestre 2 — 2026`;
+}
+
+function roleLabel(r) {
+  return { president:'Président', tresorier:'Trésorier / Caissier', membre:'Membre' }[r] || r;
+}
+
+function applyRoleRestrictions() {
+  const isPresident  = currentUser.role === 'president';
+  const isTresorier  = currentUser.role === 'tresorier';
+  const isPrivileged = isPresident || isTresorier;
+
+  // Discipline visible seulement au président
+  document.getElementById('nav-discipline').style.display = isPresident ? 'flex' : 'none';
+
+  // Boutons conditionnels
+  ['btn-new-vote','btn-new-sanction','btn-add-membre','btn-new-reunion'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isPresident ? 'inline-flex' : 'none';
+  });
+  const bCotis = document.getElementById('btn-cotis-record');
+  if (bCotis) bCotis.style.display = isPrivileged ? 'inline-flex' : 'none';
+
+  const fActs = document.getElementById('finance-actions');
+  if (fActs) {
+    fActs.querySelectorAll('button:last-child').forEach(b => b.style.display = isPrivileged ? 'inline-flex' : 'none');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+function renderDashboard() {
+  // Stats caisse
+  const entrees = TRANSACTIONS_DEMO.filter(t=>t.type==='entrée').reduce((s,t)=>s+t.montant,0);
+  const sorties = TRANSACTIONS_DEMO.filter(t=>t.type==='sortie').reduce((s,t)=>s+t.montant,0);
+  const solde   = entrees - sorties;
+  document.getElementById('stat-caisse').textContent = fmtFGN(solde);
+  document.getElementById('caisse-montant').innerHTML = `${fmtFGN(solde)} <small>FGN</small>`;
+  document.getElementById('caisse-entrees').textContent = fmtFGN(entrees) + ' FGN';
+  document.getElementById('caisse-sorties').textContent = fmtFGN(sorties) + ' FGN';
+
+  // Stats cotisations
+  const pays   = COTIS_DEMO.filter(c=>c.m1==='payé'&&c.m2==='payé').length;
+  const retard = COTIS_DEMO.filter(c=>c.m1==='retard'||c.m2==='retard').length;
+  document.getElementById('stat-cotis').textContent  = `${pays}/7`;
+  document.getElementById('stat-retard').textContent = retard;
+
+  // Prochaine réunion
+  const proch = REUNIONS_DEMO.find(r=>r.statut==='planifiée');
+  if (proch) {
+    const d = new Date(proch.date);
+    document.getElementById('prochaine-reunion').innerHTML = `
+      <div style="font-family:var(--font-display);font-size:13px;color:var(--muted);margin-bottom:6px;letter-spacing:1px">${proch.type==='physique'?'RÉUNION PHYSIQUE':'RÉUNION EN LIGNE'}</div>
+      <div style="font-size:18px;font-weight:600;color:var(--navy);margin-bottom:4px">${proch.titre}</div>
+      <div style="font-size:13px;color:var(--muted)">${formatDate(d)} · ${proch.heure}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">📍 ${proch.lieu}</div>
+      <div style="margin-top:14px"><span class="badge badge-blue">Dans ${Math.ceil((d-new Date())/(86400000))} jours</span></div>
+    `;
+  }
+
+  // Vote en cours
+  const v = VOTES_DEMO.find(v=>v.statut==='ouvert');
+  if (v) {
+    const total = v.pour + v.contre + v.abst || 1;
+    document.getElementById('vote-en-cours').innerHTML = `
+      <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px">${v.titre}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${v.desc.substring(0,80)}…</div>
+      <div class="vote-bar"><div class="vote-bar-pour" style="width:${v.pour/7*100}%"></div><div class="vote-bar-contre" style="width:${v.contre/7*100}%"></div><div class="vote-bar-abst" style="width:${v.abst/7*100}%"></div></div>
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:12px">
+        <span style="color:var(--success)">✓ Pour : ${v.pour}</span>
+        <span style="color:var(--danger)">✗ Contre : ${v.contre}</span>
+        <span style="color:var(--muted)">⊘ Abst. : ${v.abst}</span>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="voterPour('${v.id}')">Pour</button>
+        <button class="btn btn-outline btn-sm" onclick="voterContre('${v.id}')">Contre</button>
+        <button class="btn btn-outline btn-sm" onclick="voterAbst('${v.id}')">Abstention</button>
+      </div>
+    `;
+  } else {
+    document.getElementById('vote-en-cours').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Aucun vote actif</div>';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// MEMBRES
+// ════════════════════════════════════════════════════════════
+function renderMembers() {
+  const grid = document.getElementById('member-grid');
+  grid.innerHTML = MEMBRES_DEMO.map(m => `
+    <div class="member-card">
+      <div class="member-av">${m.initiales}</div>
+      <div class="member-name">${m.nom}</div>
+      <div class="member-role">${roleLabel(m.role)}</div>
+      <div class="member-tags">
+        ${m.est_etudiant_interieur ? '<span class="badge badge-green">🎓 Étudiant int.</span>' : ''}
+        <span class="badge badge-blue">Actif</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// COTISATIONS
+// ════════════════════════════════════════════════════════════
+function statBadge(s) {
+  if (s==='payé')   return '<span class="badge badge-green">✓ Payé</span>';
+  if (s==='retard') return '<span class="badge badge-red">⚠ Retard</span>';
+  return '<span class="badge badge-amber">⏳ Attente</span>';
+}
+function renderCotisations() {
+  const tbody = document.getElementById('cotis-tbody');
+  tbody.innerHTML = COTIS_DEMO.map(c => {
+    const total = (c.m1==='payé'?10000:0) + (c.m2==='payé'?10000:0) + (c.m3==='payé'?20000:0) + c.penalite;
+    return `<tr>
+      <td><strong>${c.nom || c.membre}</strong>${c.etudiant ? ' <span class="badge badge-green" style="font-size:9px">Étudiant</span>' : ''}</td>
+      <td>${statBadge(c.m1)}</td>
+      <td>${statBadge(c.m2)}</td>
+      <td>${statBadge(c.m3)}</td>
+      <td>${c.penalite ? `<span class="badge badge-red">+${fmtFGN(c.penalite)} FGN</span>` : '—'}</td>
+      <td><strong>${fmtFGN(total)} FGN</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// RÉUNIONS
+// ════════════════════════════════════════════════════════════
+const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+function renderReunions() {
+  const list = document.getElementById('reunion-list');
+  list.innerHTML = REUNIONS_DEMO.map(r => {
+    const d = new Date(r.date);
+    const statBadge = r.statut==='planifiée' ?
+      '<span class="badge badge-blue">Planifiée</span>' :
+      r.statut==='terminée' ?
+      '<span class="badge badge-muted">Terminée</span>' :
+      '<span class="badge badge-green">En cours</span>';
+    return `
+      <div class="reunion-item">
+        <div class="reunion-date-box">
+          <div class="reunion-day">${d.getDate()}</div>
+          <div class="reunion-month">${MOIS[d.getMonth()]}</div>
+        </div>
+        <div class="reunion-info">
+          <div class="reunion-title">${r.titre}</div>
+          <div class="reunion-meta">
+            <span>${r.type === 'physique' ? '🏠 Physique' : '💻 En ligne'}</span>
+            <span>🕒 ${r.heure}</span>
+            <span>📍 ${r.lieu}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          ${statBadge}
+          ${r.statut === 'planifiée' ? `<button class="btn btn-outline btn-sm" onclick="openPresence('${r.id}','${r.titre}')">📋 Présence</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openPresence(id, titre) {
+  document.getElementById('presence-title').textContent = `Présence — ${titre}`;
+  document.getElementById('presence-form').innerHTML = MEMBRES_DEMO.map(m => `
+    <div class="form-group">
+      <label class="form-label">${m.nom} ${m.est_etudiant_interieur ? '🎓' : ''}</label>
+      <select class="form-select" id="pres-${m.id}">
+        <option value="présent">✅ Présent</option>
+        <option value="retard">⏰ Retard ${m.est_etudiant_interieur ? '(exonéré)' : '— 1 000 FGN'}</option>
+        <option value="absent_justifié">📝 Absent justifié ${m.est_etudiant_interieur ? '(exonéré)' : '— 2 000 FGN'}</option>
+        <option value="absent_non_justifié">❌ Absent non justifié ${m.est_etudiant_interieur ? '(exonéré)' : '— 5 000 FGN'}</option>
+      </select>
+    </div>
+  `).join('');
+  openModal('modal-presence');
+}
+
+// ════════════════════════════════════════════════════════════
+// VOTES
+// ════════════════════════════════════════════════════════════
+function renderVotes() {
+  const list = document.getElementById('votes-list');
+  list.innerHTML = VOTES_DEMO.map(v => {
+    const total = v.pour + v.contre + v.abst || 1;
+    const pPour = Math.round(v.pour / 7 * 100);
+    const pContre = Math.round(v.contre / 7 * 100);
+    const pAbst = Math.round(v.abst / 7 * 100);
+    const statutBadge = v.statut === 'ouvert' ?
+      '<span class="badge badge-blue">🗳 Ouvert</span>' :
+      v.statut === 'validé' ?
+      '<span class="badge badge-green">✓ Validé</span>' :
+      '<span class="badge badge-red">✗ Rejeté</span>';
+    return `
+      <div class="vote-card">
+        <div class="vote-meta">
+          ${statutBadge}
+          <span class="badge badge-muted">${v.type}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">Seuil : ${v.seuil}/7</span>
+        </div>
+        <div class="vote-title">${v.titre}</div>
+        <div class="vote-desc">${v.desc}</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-labels">
+            <span style="color:var(--success)">Pour : ${v.pour}</span>
+            <span style="color:var(--danger)">Contre : ${v.contre}</span>
+            <span style="color:var(--muted)">Abst : ${v.abst}</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-pour" style="width:${pPour}%"></div>
+            <div class="vote-bar-contre" style="width:${pContre}%"></div>
+            <div class="vote-bar-abst" style="width:${pAbst}%"></div>
+          </div>
+        </div>
+        ${v.statut === 'ouvert' ? `
+        <div class="vote-actions">
+          <button class="btn btn-primary btn-sm" onclick="voterPour('${v.id}')">✓ Pour</button>
+          <button class="btn btn-outline btn-sm" onclick="voterContre('${v.id}')">✗ Contre</button>
+          <button class="btn btn-outline btn-sm" onclick="voterAbst('${v.id}')">⊘ Abstention</button>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function voterPour(id)    { showToast('Vote "Pour" enregistré ✓', 'success'); }
+function voterContre(id)  { showToast('Vote "Contre" enregistré', 'warn'); }
+function voterAbst(id)    { showToast('Abstention enregistrée'); }
+
+// ════════════════════════════════════════════════════════════
+// TRANSACTIONS
+// ════════════════════════════════════════════════════════════
+function renderTransactions() {
+  const tbody = document.getElementById('transactions-tbody');
+  tbody.innerHTML = TRANSACTIONS_DEMO.map(t => `
+    <tr>
+      <td>${t.date}</td>
+      <td>${t.type==='entrée' ?
+        '<span class="badge badge-green">↑ Entrée</span>' :
+        '<span class="badge badge-red">↓ Sortie</span>'}</td>
+      <td>${t.motif}</td>
+      <td><span class="badge badge-muted">${t.cat}</span></td>
+      <td>${t.membre}</td>
+      <td style="text-align:right;font-weight:600;color:${t.type==='entrée'?'var(--success)':'var(--danger)'}">
+        ${t.type==='entrée'?'+':'-'}${fmtFGN(t.montant)} FGN
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// MESSAGES
+// ════════════════════════════════════════════════════════════
+function renderMessages() {
+  const list = document.getElementById('msg-list');
+  list.innerHTML = MESSAGES_DEMO.map(m => `
+    <div class="msg-item ${m.epingle ? 'msg-pinned' : ''}">
+      <div class="msg-header">
+        <div class="msg-av">${m.initiales}</div>
+        <div class="msg-author">${m.auteur}</div>
+        <div class="msg-role">${m.role}</div>
+        ${m.epingle ? '<span class="badge badge-gold" style="font-size:9px">📌 Épinglé</span>' : ''}
+        <div class="msg-time">${m.time}</div>
+      </div>
+      <div class="msg-text">${m.texte}</div>
+    </div>
+  `).join('');
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const texte = input.value.trim();
+  if (!texte) return;
+  MESSAGES_DEMO.push({
+    auteur: currentUser.nom, role: roleLabel(currentUser.role),
+    initiales: currentUser.initiales, texte, epingle: false, time: 'À l\'instant'
+  });
+  renderMessages();
+  input.value = '';
+  showToast('Message envoyé au groupe ✓', 'success');
+}
+
+// ════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════════════════════════════════
+function renderNotifications() {
+  const list = document.getElementById('notif-list');
+  list.innerHTML = NOTIFS_DEMO.map(n => `
+    <div class="notif-item">
+      <div class="notif-dot ${n.lu ? 'read' : ''}"></div>
+      <div class="notif-content">
+        <div class="notif-title">${n.titre}</div>
+        <div class="notif-body">${n.contenu}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// SANCTIONS
+// ════════════════════════════════════════════════════════════
+function renderSanctions() {
+  const list = document.getElementById('sanctions-list');
+  list.innerHTML = SANCTIONS_DEMO.map(s => `
+    <div class="discipline-card">
+      <div class="discipline-icon">${s.type==='amende'?'💸':'⚠️'}</div>
+      <div class="discipline-info">
+        <div class="discipline-member">
+          ${s.membre}
+          ${s.type==='amende' ?
+            `<span class="badge badge-red" style="margin-left:8px">Amende ${fmtFGN(s.montant)} FGN</span>` :
+            '<span class="badge badge-amber" style="margin-left:8px">Avertissement</span>'}
+        </div>
+        <div class="discipline-motif">${s.motif}</div>
+        <div class="discipline-meta">Émis par ${s.emis_par} · ${s.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// SAUVEGARDE (démo → à remplacer par appels Supabase)
+// ════════════════════════════════════════════════════════════
+function savePaiement() {
+  closeModal('modal-paiement');
+  showToast('Paiement enregistré ✓', 'success');
+}
+function saveReunion() {
+  closeModal('modal-reunion');
+  showToast('Réunion planifiée ✓', 'success');
+}
+function saveVote() {
+  closeModal('modal-vote');
+  showToast('Vote ouvert ✓', 'success');
+}
+function saveSanction() {
+  closeModal('modal-sanction');
+  showToast('Sanction émise ✓', 'success');
+}
+function saveTransaction() {
+  closeModal('modal-transaction');
+  showToast('Transaction enregistrée ✓', 'success');
+}
+function savePresences() {
+  closeModal('modal-presence');
+  showToast('Présences enregistrées ✓', 'success');
+}
+
+function updateVoteThreshold(type) {
+  // Info visuelle du seuil selon le type
+}
+
+// ════════════════════════════════════════════════════════════
+// EXPORT PDF (jsPDF)
+// ════════════════════════════════════════════════════════════
+function exportBilanPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.setTextColor(31, 58, 95);
+  doc.text('STRUCTURE QUEDALLE', 105, 20, { align:'center' });
+
+  doc.setFontSize(12);
+  doc.setTextColor(100);
+  doc.text('Bilan Trimestriel — T2 2026', 105, 30, { align:'center' });
+
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, 14, 45);
+
+  let y = 60;
+  doc.setFontSize(12);
+  doc.setTextColor(31, 58, 95);
+  doc.text('COTISATIONS', 14, y); y += 8;
+
+  doc.setFontSize(9);
+  doc.setTextColor(80);
+  COTIS_DEMO.forEach(c => {
+    const line = `${c.membre} — M1:${c.m1} / M2:${c.m2} / M3:${c.m3}${c.penalite?' / Pénalité:'+fmtFGN(c.penalite)+' FGN':''}`;
+    doc.text(line, 14, y); y += 6;
+  });
+
+  y += 6;
+  doc.setFontSize(12);
+  doc.setTextColor(31, 58, 95);
+  doc.text('TRÉSORERIE', 14, y); y += 8;
+
+  const entrees = TRANSACTIONS_DEMO.filter(t=>t.type==='entrée').reduce((s,t)=>s+t.montant,0);
+  const sorties = TRANSACTIONS_DEMO.filter(t=>t.type==='sortie').reduce((s,t)=>s+t.montant,0);
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Total entrées : ${fmtFGN(entrees)} FGN`, 14, y); y+=7;
+  doc.text(`Total sorties : ${fmtFGN(sorties)} FGN`, 14, y); y+=7;
+  doc.text(`Solde disponible : ${fmtFGN(entrees-sorties)} FGN`, 14, y);
+
+  doc.save('bilan-quedalle-T2-2026.pdf');
+  showToast('Bilan PDF généré ✓', 'success');
+}
+
+// ════════════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════════════
+function showPage(name, navItem) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  if (navItem) navItem.classList.add('active');
+
+  const titles = {
+    accueil:'TABLEAU DE BORD', membres:'MEMBRES',
+    cotisations:'COTISATIONS', reunions:'RÉUNIONS',
+    votes:'VOTES & DÉCISIONS', finances:'TRÉSORERIE',
+    discipline:'DISCIPLINE', messages:'MESSAGES',
+    notifications:'NOTIFICATIONS'
+  };
+  document.getElementById('header-title').textContent = titles[name] || name.toUpperCase();
+
+  // Ferme sidebar sur mobile
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Fermer modal au clic overlay
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+function showToast(msg, type='') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+
+function fmtFGN(n) {
+  return new Intl.NumberFormat('fr-FR').format(n);
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  ['p-date','r-date','t-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  // Date clôture vote par défaut = dans 7 jours
+  const v = document.getElementById('v-cloture');
+  if (v) {
+    const d = new Date(); d.setDate(d.getDate()+7);
+    v.value = d.toISOString().slice(0,16);
+  }
+}
+
+// Login au clavier
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('page-login').style.display !== 'none') doLogin();
+  }
+});
+</script>
+</body>
+</html>
